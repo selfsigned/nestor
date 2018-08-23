@@ -1,17 +1,22 @@
 package main
 
 import (
-	"os"
 	"fmt"
+	"os"
 	"time"
-	"net/http"
-	"io/ioutil"
+
+	"flag"
+	"strconv"
+
 	"encoding/json"
+	"io/ioutil"
+	"net/http"
 )
 
-var (
-	api_url = "https://api-nestor.com/"
-	menu_route = "menu/"
+const (
+	//api
+	API       = "https://api-nestor.com/"
+	MenuRoute = "menu/"
 )
 
 type Food struct {
@@ -45,15 +50,15 @@ type Food struct {
 }
 
 type Week_menus struct {
-	Menus []struct {
+	Days []struct {
 		Menus []struct {
-			Label  string `json:"label"`
-			Price  int    `json:"price"`
-			Desc   string `json:"desc"`
-			ID     string `json:"_id"`
-			Entree Food   `json:"entree"`
-			Dish   Food   `json:"dish"`
-			Dessert Food  `json:"dessert"`
+			Label               string    `json:"label"`
+			Price               int       `json:"price"`
+			Desc                string    `json:"desc"`
+			ID                  string    `json:"_id"`
+			Entree              Food      `json:"entree"`
+			Dish                Food      `json:"dish"`
+			Dessert             Food      `json:"dessert"`
 			Date                time.Time `json:"date"`
 			Type                int       `json:"type"`
 			Soldout             bool      `json:"soldout"`
@@ -77,18 +82,56 @@ type Week_menus struct {
 	KitchenID string `json:"kitchen_id"`
 }
 
-func disp_day (day int, menu Week_menus) {
-	t := menu.Menus[day].Menus[0]
-	fmt.Printf("Entrée: %s Note:%.2f\nDish:%s Note:%.2f\nDessert:%s Note:%.2f\n",
+func disp_day(day int, menu Week_menus) {
+	t := menu.Days[day].Menus[0]
+	fmt.Printf("Entrée: %s Note:%.2f\nDish:%s Note:%.2f\nDessert:%s Note:%.2f\n\n",
 		t.Entree.Name, t.Entree.Review.Note, t.Dish.Name, t.Dish.Review.Note,
 		t.Dessert.Name, t.Dessert.Review.Note)
 }
 
-func main() {
-	if len(os.Args) != 2 {
-		os.Exit(1)
+func get_day_index(day time.Time, menu Week_menus) int {
+	if day.Weekday() == 0 || day.Weekday() > 5 {
+		return -1
 	}
-	url := api_url + menu_route + os.Args[1]
+	for i, v := range menu.Days {
+		if v.Date.YearDay() == day.YearDay() {
+			return i
+		}
+	}
+	return -1
+}
+
+func show_daily_menu(day time.Time, day_str string, menu Week_menus) {
+	d := get_day_index(day, menu)
+	if d == -1 {
+		println("Error: No menu for" + day_str)
+		return
+	}
+	println(day_str + "'s menu: ")
+	disp_day(d, menu)
+}
+
+func show_weekly_menu(menu Week_menus) {
+	if menu.NextWeek {
+		println("Showing next week's menus")
+	}
+	for _, v := range menu.Days {
+		show_daily_menu(v.Date, v.Date.Weekday().String(), menu)
+	}
+}
+
+func main() {
+	// Parsing
+	var (
+		zip_code   = flag.Int("zip", 75017, "The postal code for the APi query")
+		p_today    = flag.Bool("today", true, "Show today's menu")
+		p_week     = flag.Bool("week", false, "Show all the menus for the week")
+		p_tomorrow = flag.Bool("tomorrow", false, "Show tomorrow's menu")
+	)
+	flag.Parse()
+
+	// JSON GET
+	url := API + MenuRoute + strconv.Itoa(*zip_code)
 	resp, err := http.Get(url)
 	if err != nil {
 		panic(err)
@@ -107,14 +150,12 @@ func main() {
 		panic(err)
 	}
 
-	println("Monday")
-	disp_day(0, menu)
-	println("\nTuesday")
-	disp_day(1, menu)
-	println("\nWednesday")
-	disp_day(2, menu)
-	println("\nThursday")
-	disp_day(3, menu)
-	println("\nFriday")
-	disp_day(4, menu)
+	// Arg handling
+	if *p_week {
+		show_weekly_menu(menu)
+	} else if *p_tomorrow {
+		show_daily_menu(time.Now().AddDate(0, 0, 1), "Tomorrow", menu)
+	} else if *p_today {
+		show_daily_menu(time.Now(), "Today", menu)
+	}
 }
