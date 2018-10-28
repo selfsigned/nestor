@@ -23,14 +23,14 @@ const (
 
 var (
 	// API
-	zip_code       = flag.Int("zip", 75016, "The postal code for the APi query")
+	zip_code = flag.Int("zip", 75017, "The postal code for the APi query")
 	// Time
-	p_today        = flag.Bool("today", false, "Show today's menu")
-	p_week         = flag.Bool("week", false, "Show all the menus for the week")
-	p_tomorrow     = flag.Bool("tomorrow", false, "Show tomorrow's menu")
+	p_today    = flag.Bool("today", false, "Show today's menu")
+	p_week     = flag.Bool("week", false, "Show all the menus for the week")
+	p_tomorrow = flag.Bool("tomorrow", false, "Show tomorrow's menu")
 	// Display
-	d_seen         = flag.Bool("seen", false, "Show the number of times the item has been seen")
-	d_ingredients  = flag.Bool("ingredients", false, "Show the ingredients (ugly)")
+	d_seen        = flag.Bool("seen", false, "Show the number of times the item has been seen")
+	d_ingredients = flag.Bool("ingredients", false, "Show the ingredients (ugly)")
 )
 
 type Food struct {
@@ -103,16 +103,16 @@ func BuildFoodStr(f Food) string {
 	}
 	note := f.Review.Note
 	switch {
-		case note >= 4.1:
-			str = fmt.Sprintf("%sNote: %.2f (%d votes)", str,
-				Green(note), f.Review.NbVote)
-		case note > 3.7:
-			// Brown is Yellow, nani the fuck??!
-			str = fmt.Sprintf("%sNote: %.2f (%d votes)", str,
-				Brown(note), f.Review.NbVote)
-		case note != 0:
-			str = fmt.Sprintf("%sNote: %.2f (%d votes)", str,
-				Red(note), f.Review.NbVote)
+	case note >= 4.1:
+		str = fmt.Sprintf("%sNote: %.2f (%d votes)", str,
+			Green(note), f.Review.NbVote)
+	case note > 3.7:
+		// Brown is Yellow, nani the fuck??!
+		str = fmt.Sprintf("%sNote: %.2f (%d votes)", str,
+			Brown(note), f.Review.NbVote)
+	case note != 0:
+		str = fmt.Sprintf("%sNote: %.2f (%d votes)", str,
+			Red(note), f.Review.NbVote)
 	}
 	if len(f.Releases) <= 1 {
 		str = fmt.Sprintf("%s %s", str, Brown("New!"))
@@ -161,10 +161,10 @@ func GetDayIndex(day time.Time, menu WeekMenus) int {
 func ShowDailyMenu(day time.Time, day_str string, menu WeekMenus) {
 	d := GetDayIndex(day, menu)
 	if d == -1 {
-		println("Error: No menu for" + day_str)
+		println("Error: No menu for " + day_str)
 		return
 	}
-		print(day_str + "'s menu: ")
+	print(day_str + "'s menu: ")
 	DispDay(d, menu)
 }
 
