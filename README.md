@@ -1,6 +1,7 @@
 # GO Nestor 
 A  __command line__ [nestor](https://nestorparis.com/) client written in go.
-![demo](./assets/nestor.png)
+
+![demo](.assets/nestor.png)
 
 ## Usage
 ``` bash
